@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wow Beauty Supply Price Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    #scanner-container { width: 100%; max-width: 400px; margin: auto; }
+    #product-info { margin-top: 20px; font-size: 18px; }
+    video { width: 100%; border: 1px solid #ccc; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h2>📦 Wow Beauty Supply Price Checker</h2>
+  <div id="scanner-container">
+    <video id="video" muted autoplay playsinline></video>
+    <div id="product-info">Scan a product barcode...</div>
+  </div>
+
+  <script type="module">
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js';
+
+    const codeReader = new BrowserMultiFormatReader();
+    const videoElement = document.getElementById('video');
+    const infoElement = document.getElementById('product-info');
+    let productData = {};
+
+    // Load product JSON
+    fetch('product_data.json')
+      .then(response => response.json())
+      .then(data => {
+        data.forEach(item => productData[item.barcode] = item);
+        startScanner();
+      });
+
+    function startScanner() {
+      codeReader.decodeFromVideoDevice(null, videoElement, (result, err) => {
+        if (result) {
+          const code = result.getText();
+          const item = productData[code];
+          if (item) {
+            infoElement.innerHTML = `
+              <strong>${item.name}</strong><br>
+              💲Price: $${item.price}<br>
+              📏Size: ${item.size || '-'}<br>
+              🎨Color: ${item.color || '-'}<br>
+              🏷️Brand: ${item.vendor || '-'}
+            `;
+          } else {
+            infoElement.innerHTML = `No product found for code: ${code}`;
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
